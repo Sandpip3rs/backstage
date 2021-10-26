@@ -15,56 +15,91 @@
  */
 
 import {
-  googleAuthApiRef,
-  gitlabAuthApiRef,
-  oktaAuthApiRef,
-  githubAuthApiRef,
-  microsoftAuthApiRef,
-  oneloginAuthApiRef,
   bitbucketAuthApiRef,
+  githubAuthApiRef,
+  gitlabAuthApiRef,
+  googleAuthApiRef,
+  microsoftAuthApiRef,
+  oktaAuthApiRef,
+  oneloginAuthApiRef,
 } from '@backstage/core-plugin-api';
+import {Config} from '@backstage/config';
 
-export const providers = [
-  {
-    id: 'google-auth-provider',
-    title: 'Google',
-    message: 'Sign In using Google',
-    apiRef: googleAuthApiRef,
-  },
-  {
-    id: 'microsoft-auth-provider',
-    title: 'Microsoft',
-    message: 'Sign In using Microsoft Azure AD',
-    apiRef: microsoftAuthApiRef,
-  },
-  {
-    id: 'gitlab-auth-provider',
-    title: 'GitLab',
-    message: 'Sign In using GitLab',
-    apiRef: gitlabAuthApiRef,
-  },
-  {
-    id: 'github-auth-provider',
-    title: 'GitHub',
-    message: 'Sign In using GitHub',
-    apiRef: githubAuthApiRef,
-  },
-  {
-    id: 'okta-auth-provider',
-    title: 'Okta',
-    message: 'Sign In using Okta',
-    apiRef: oktaAuthApiRef,
-  },
-  {
-    id: 'onelogin-auth-provider',
-    title: 'OneLogin',
-    message: 'Sign In using OneLogin',
-    apiRef: oneloginAuthApiRef,
-  },
-  {
-    id: 'bitbucket-auth-provider',
-    title: 'Bitbucket',
-    message: 'Sign In using Bitbucket',
-    apiRef: bitbucketAuthApiRef,
-  },
-];
+type Provider = {
+  id: string;
+  title: string;
+  message: string;
+  apiRef: any;
+};
+
+export const providers = (config: Config) => {
+  const providerList: Provider[] = [];
+  const configuredProviders: Config | undefined =
+    config.getOptionalConfig('auth.providers');
+
+  if (configuredProviders === undefined) {
+    return providerList;
+  }
+
+  if (configuredProviders.has('google')) {
+    providerList.push({
+      id: 'google',
+      title: 'Google',
+      message: 'Sign in using Google',
+      apiRef: googleAuthApiRef,
+    });
+  }
+
+  if (configuredProviders.has('github')) {
+    providerList.push({
+      id: 'github',
+      title: 'GitHub',
+      message: 'Sign in using GitHub',
+      apiRef: githubAuthApiRef,
+    });
+  }
+
+  if (configuredProviders.has('gitlab')) {
+    providerList.push({
+      id: 'gitlab',
+      title: 'GitLab',
+      message: 'Sign in using GitLab',
+      apiRef: gitlabAuthApiRef,
+    });
+  }
+
+  if (configuredProviders.has('bitbucket')) {
+    providerList.push({
+      id: 'bitbucket',
+      title: 'Bitbucket',
+      message: 'Sign in using Bitbucket',
+      apiRef: bitbucketAuthApiRef,
+    });
+  }
+
+  if (configuredProviders.has('microsoft')) {
+    providerList.push({
+      id: 'microsoft',
+      title: 'Microsoft',
+      message: 'Sign in using Microsoft',
+      apiRef: microsoftAuthApiRef,
+    });
+  }
+  if (configuredProviders.has('okta')) {
+    providerList.push({
+      id: 'okta',
+      title: 'Okta',
+      message: 'Sign in using Okta',
+      apiRef: oktaAuthApiRef,
+    });
+  }
+  if (configuredProviders.has('onelogin')) {
+    providerList.push({
+      id: 'onelogin',
+      title: 'OneLogin',
+      message: 'Sign in using OneLogin',
+      apiRef: oneloginAuthApiRef,
+    });
+  }
+  return providerList;
+};
