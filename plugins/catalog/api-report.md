@@ -65,6 +65,9 @@ export type BackstageOverrides = Overrides & {
 };
 
 // @public (undocumented)
+export type Breakpoint = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+
+// @public (undocumented)
 export const CatalogEntityPage: () => JSX.Element;
 
 // @public (undocumented)
@@ -99,7 +102,8 @@ export const catalogPlugin: BackstagePlugin<
       },
       true
     >;
-  }
+  },
+  CatalogInputPluginOptions
 >;
 
 // @public (undocumented)
@@ -132,10 +136,18 @@ export const CatalogTable: {
     ): TableColumn<CatalogTableRow>;
     createSystemColumn(): TableColumn<CatalogTableRow>;
     createOwnerColumn(): TableColumn<CatalogTableRow>;
+    createSpecTargetsColumn(): TableColumn<CatalogTableRow>;
     createSpecTypeColumn(): TableColumn<CatalogTableRow>;
     createSpecLifecycleColumn(): TableColumn<CatalogTableRow>;
     createMetadataDescriptionColumn(): TableColumn<CatalogTableRow>;
     createTagsColumn(): TableColumn<CatalogTableRow>;
+    createTitleColumn(
+      options?:
+        | {
+            hidden?: boolean | undefined;
+          }
+        | undefined,
+    ): TableColumn<CatalogTableRow>;
   }>;
 };
 
@@ -145,6 +157,8 @@ export interface CatalogTableProps {
   actions?: TableProps<CatalogTableRow>['actions'];
   // (undocumented)
   columns?: TableColumn<CatalogTableRow>[];
+  // (undocumented)
+  subtitle?: string;
   // (undocumented)
   tableOptions?: TableProps<CatalogTableRow>['options'];
 }
@@ -162,6 +176,9 @@ export interface CatalogTableRow {
     ownedByRelations: CompoundEntityRef[];
   };
 }
+
+// @public (undocumented)
+export type ColumnBreakpoints = Record<Breakpoint, number>;
 
 // @public
 export interface DefaultCatalogPageProps {
@@ -259,10 +276,10 @@ export interface EntityLayoutProps {
   children?: React_2.ReactNode;
   // (undocumented)
   NotFoundComponent?: React_2.ReactNode;
-  // Warning: (ae-forgotten-export) The symbol "contextMenuOptions" needs to be exported by the entry point index.d.ts
+  // Warning: (ae-forgotten-export) The symbol "EntityContextMenuOptions" needs to be exported by the entry point index.d.ts
   //
   // (undocumented)
-  UNSTABLE_contextMenuOptions?: contextMenuOptions;
+  UNSTABLE_contextMenuOptions?: EntityContextMenuOptions;
   // Warning: (ae-forgotten-export) The symbol "ExtraContextMenuItem" needs to be exported by the entry point index.d.ts
   //
   // (undocumented)
@@ -283,15 +300,11 @@ export type EntityLayoutRouteProps = {
   >;
 };
 
-// Warning: (ae-forgotten-export) The symbol "EntityLinksCard" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
-export const EntityLinksCard: EntityLinksCard_2;
+export const EntityLinksCard: (props: EntityLinksCardProps) => JSX.Element;
 
 // @public (undocumented)
 export interface EntityLinksCardProps {
-  // Warning: (ae-forgotten-export) The symbol "ColumnBreakpoints" needs to be exported by the entry point index.d.ts
-  //
   // (undocumented)
   cols?: ColumnBreakpoints | number;
   // (undocumented)

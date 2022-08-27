@@ -40,7 +40,7 @@ import {
 import {
   AuthHandler,
   AuthResolverContext,
-  RedirectInfo,
+  OAuthStartResponse,
   SignInResolver,
 } from '../types';
 import { createAuthProviderIntegration } from '../createAuthProviderIntegration';
@@ -91,7 +91,7 @@ export class OidcAuthProvider implements OAuthHandlers {
     this.resolverContext = options.resolverContext;
   }
 
-  async start(req: OAuthStartRequest): Promise<RedirectInfo> {
+  async start(req: OAuthStartRequest): Promise<OAuthStartResponse> {
     const { strategy } = await this.implementation;
     const options: Record<string, string> = {
       scope: req.scope || this.scope || 'openid profile email',
@@ -199,18 +199,6 @@ export class OidcAuthProvider implements OAuthHandlers {
 }
 
 /**
- * @public
- * @deprecated This type has been inlined into the create method and will be removed.
- */
-export type OidcProviderOptions = {
-  authHandler?: AuthHandler<OidcAuthResult>;
-
-  signIn?: {
-    resolver: SignInResolver<OidcAuthResult>;
-  };
-};
-
-/**
  * Auth provider integration for generic OpenID Connect auth
  *
  * @public
@@ -268,9 +256,3 @@ export const oidc = createAuthProviderIntegration({
       });
   },
 });
-
-/**
- * @public
- * @deprecated Use `providers.oidc.create` instead
- */
-export const createOidcProvider = oidc.create;

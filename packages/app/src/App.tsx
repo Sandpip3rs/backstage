@@ -35,11 +35,13 @@ import {
 } from '@backstage/core-components';
 import { apiDocsPlugin, ApiExplorerPage } from '@backstage/plugin-api-docs';
 import { AzurePullRequestsPage } from '@backstage/plugin-azure-devops';
+
 import {
   CatalogEntityPage,
   CatalogIndexPage,
   catalogPlugin,
-} from '@backstage/plugin-catalog';
+} from '@internal/plugin-catalog-customized';
+
 import { CatalogGraphPage } from '@backstage/plugin-catalog-graph';
 import {
   CatalogImportPage,
@@ -58,6 +60,7 @@ import { HomepageCompositionRoot } from '@backstage/plugin-home';
 import { LighthousePage } from '@backstage/plugin-lighthouse';
 import { NewRelicPage } from '@backstage/plugin-newrelic';
 import {
+  NextScaffolderPage,
   ScaffolderFieldExtensions,
   ScaffolderPage,
   scaffolderPlugin,
@@ -66,8 +69,8 @@ import { SearchPage } from '@backstage/plugin-search';
 import { TechRadarPage } from '@backstage/plugin-tech-radar';
 import {
   TechDocsIndexPage,
-  TechDocsReaderPage,
   techdocsPlugin,
+  TechDocsReaderPage,
 } from '@backstage/plugin-techdocs';
 import { TechDocsAddons } from '@backstage/plugin-techdocs-react';
 import {
@@ -82,13 +85,15 @@ import {
 import { AdvancedSettings } from './components/advancedSettings';
 import AlarmIcon from '@material-ui/icons/Alarm';
 import React from 'react';
-import { hot } from 'react-hot-loader/root';
 import { Navigate, Route } from 'react-router';
 import { apis } from './apis';
 import { entityPage } from './components/catalog/EntityPage';
 import { homePage } from './components/home/HomePage';
 import { Root } from './components/Root';
-import { LowerCaseValuePickerFieldExtension } from './components/scaffolder/customScaffolderExtensions';
+import {
+  DelayingComponentFieldExtension,
+  LowerCaseValuePickerFieldExtension,
+} from './components/scaffolder/customScaffolderExtensions';
 import { defaultPreviewTemplate } from './components/scaffolder/defaultPreviewTemplate';
 import { searchPage } from './components/search/SearchPage';
 import { providers } from './identityProviders';
@@ -111,7 +116,7 @@ const app = createApp({
       return (
         <SignInPage
           {...props}
-          providers={['custom', ...providers]}
+          providers={[...providers()]}
           title="Select a sign-in method"
           align="center"
         />
@@ -210,6 +215,24 @@ const routes = (
         <LowerCaseValuePickerFieldExtension />
       </ScaffolderFieldExtensions>
     </Route>
+    <Route
+      path="/create/next"
+      element={
+        <NextScaffolderPage
+          groups={[
+            {
+              title: 'Recommended',
+              filter: entity =>
+                entity?.metadata?.tags?.includes('recommended') ?? false,
+            },
+          ]}
+        />
+      }
+    >
+      <ScaffolderFieldExtensions>
+        <DelayingComponentFieldExtension />
+      </ScaffolderFieldExtensions>
+    </Route>
     <Route path="/explore" element={<ExplorePage />} />
     <Route
       path="/tech-radar"
@@ -252,4 +275,4 @@ const App = () => (
   </AppProvider>
 );
 
-export default hot(App);
+export default App;

@@ -15,6 +15,7 @@ nav:
       - The Spotify Story: 'overview/background.md'
       - Strategies for adopting: 'overview/adopting.md'
       - Release & Versioning Policy: 'overview/versioning-policy.md'
+      - Backstage Threat Model: 'overview/threat-model.md'
       - Support and community: 'overview/support.md'
       - Glossary: 'overview/glossary.md'
       - Logo assets: 'overview/logos.md'
@@ -95,11 +96,13 @@ nav:
           - Discovery: 'integrations/azure/discovery.md'
           - Org Data: 'integrations/azure/org.md'
       - Bitbucket:
-          - Locations: 'integrations/bitbucket/locations.md'
           - Discovery: 'integrations/bitbucket/discovery.md'
       - Bitbucket Cloud:
           - Locations: 'integrations/bitbucketCloud/locations.md'
           - Discovery: 'integrations/bitbucketCloud/discovery.md'
+      - Bitbucket Server:
+          - Locations: 'integrations/bitbucketServer/locations.md'
+          - Discovery: 'integrations/bitbucketServer/discovery.md'
       - Datadog:
           - Installation: 'integrations/datadog-rum/installation.md'
       - Gerrit:
@@ -164,6 +167,7 @@ nav:
       - Glossary: 'auth/glossary.md'
   - Deployment:
       - Deploying Backstage: 'deployment/index.md'
+      - Scaling: 'deployment/scaling.md'
       - Docker: 'deployment/docker.md'
       - Kubernetes: 'deployment/k8s.md'
       - Heroku: 'deployment/heroku.md'

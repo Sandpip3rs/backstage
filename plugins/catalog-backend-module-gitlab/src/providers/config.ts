@@ -15,21 +15,25 @@
  */
 
 import { Config } from '@backstage/config';
-import { GitlabProviderConfig } from '../lib/types';
+import { GitlabProviderConfig } from '../lib';
 
 /**
  * Extracts the gitlab config from a config object
  *
  * @public
  *
+ * @param id - The provider key
  * @param config - The config object to extract from
  */
 function readGitlabConfig(id: string, config: Config): GitlabProviderConfig {
-  const group = config.getString('group');
+  const group = config.getOptionalString('group') ?? '';
   const host = config.getString('host');
   const branch = config.getOptionalString('branch') ?? 'master';
   const catalogFile =
     config.getOptionalString('entityFilename') ?? 'catalog-info.yaml';
+  const projectPattern = new RegExp(
+    config.getOptionalString('projectPattern') ?? /[\s\S]*/,
+  );
 
   return {
     id,
@@ -37,6 +41,7 @@ function readGitlabConfig(id: string, config: Config): GitlabProviderConfig {
     branch,
     host,
     catalogFile,
+    projectPattern,
   };
 }
 

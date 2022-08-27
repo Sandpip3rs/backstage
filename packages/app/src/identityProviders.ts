@@ -15,56 +15,72 @@
  */
 
 import {
-  googleAuthApiRef,
-  gitlabAuthApiRef,
-  oktaAuthApiRef,
-  githubAuthApiRef,
-  microsoftAuthApiRef,
-  oneloginAuthApiRef,
   bitbucketAuthApiRef,
+  githubAuthApiRef,
+  gitlabAuthApiRef,
+  googleAuthApiRef,
+  microsoftAuthApiRef,
+  oktaAuthApiRef,
+  oneloginAuthApiRef,
 } from '@backstage/core-plugin-api';
+import { Config } from '@backstage/config';
+import { getRootLogger, loadBackendConfig } from '@backstage/backend-common';
 
-export const providers = [
-  {
-    id: 'google-auth-provider',
-    title: 'Google',
-    message: 'Sign In using Google',
-    apiRef: googleAuthApiRef,
-  },
-  {
-    id: 'microsoft-auth-provider',
-    title: 'Microsoft',
-    message: 'Sign In using Microsoft Azure AD',
-    apiRef: microsoftAuthApiRef,
-  },
-  {
-    id: 'gitlab-auth-provider',
-    title: 'GitLab',
-    message: 'Sign In using GitLab',
-    apiRef: gitlabAuthApiRef,
-  },
-  {
-    id: 'github-auth-provider',
-    title: 'GitHub',
-    message: 'Sign In using GitHub',
-    apiRef: githubAuthApiRef,
-  },
-  {
-    id: 'okta-auth-provider',
-    title: 'Okta',
-    message: 'Sign In using Okta',
-    apiRef: oktaAuthApiRef,
-  },
-  {
-    id: 'onelogin-auth-provider',
-    title: 'OneLogin',
-    message: 'Sign In using OneLogin',
-    apiRef: oneloginAuthApiRef,
-  },
-  {
-    id: 'bitbucket-auth-provider',
-    title: 'Bitbucket',
-    message: 'Sign In using Bitbucket',
-    apiRef: bitbucketAuthApiRef,
-  },
-];
+type Provider = {
+  id: string;
+  title: string;
+  message: string;
+  apiRef: any;
+};
+
+export const providers = () => {
+  const providerList: Provider[] = [];
+
+  let config: Config | undefined;
+
+  loadBackendConfig({
+    argv: process.argv,
+    logger: getRootLogger(),
+  }).then(loadedConfig => {
+    config = loadedConfig;
+  });
+
+  if (config === undefined) {
+    return [];
+  }
+
+  const authProvidersConfig = config.getConfig('auth.providers') || [];
+
+  authProvidersConfig.map(authProviderConfig => {
+    const id = authProviderConfig.getString('id');
+    const title = authProviderConfig.getString('title');
+    const message = authProviderConfig.getString('message');
+    switch (id) {
+      case 'github':
+        providerList.push({ id, title, message, apiRef: githubAuthApiRef });
+        break;
+      case 'gitlab':
+        providerList.push({ id, title, message, apiRef: gitlabAuthApiRef });
+        break;
+      case 'bitbucket':
+        providerList.push({ id, title, message, apiRef: bitbucketAuthApiRef });
+        break;
+      case 'google':
+        providerList.push({ id, title, message, apiRef: googleAuthApiRef });
+        break;
+      case 'microsoft':
+        providerList.push({ id, title, message, apiRef: microsoftAuthApiRef });
+        break;
+      case 'okta':
+        providerList.push({ id, title, message, apiRef: oktaAuthApiRef });
+        break;
+      case 'onelogin':
+        providerList.push({ id, title, message, apiRef: oneloginAuthApiRef });
+        break;
+      default:
+        break;
+    }
+  });
+
+  return providerList;
+};

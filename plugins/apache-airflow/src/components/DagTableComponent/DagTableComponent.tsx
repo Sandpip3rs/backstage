@@ -20,6 +20,7 @@ import {
   StatusOK,
   Table,
   TableColumn,
+  WarningPanel,
 } from '@backstage/core-components';
 import { useApi } from '@backstage/core-plugin-api';
 import Box from '@material-ui/core/Box';
@@ -129,9 +130,19 @@ export const DenseTable = ({ dags }: DenseTableProps) => {
   );
 };
 
-export const DagTableComponent = () => {
+type DagTableComponentProps = {
+  dagIds?: string[];
+};
+
+export const DagTableComponent = (props: DagTableComponentProps) => {
+  const { dagIds } = props;
   const apiClient = useApi(apacheAirflowApiRef);
+
   const { value, loading, error } = useAsync(async (): Promise<Dag[]> => {
+    if (dagIds) {
+      const { dags } = await apiClient.getDags(dagIds);
+      return dags;
+    }
     return await apiClient.listDags();
   }, []);
 
@@ -146,6 +157,22 @@ export const DagTableComponent = () => {
     id: el.dag_id, // table records require `id` attribute
     dagUrl: `${apiClient.baseUrl}dag_details?dag_id=${el.dag_id}`, // construct path to DAG using `baseUrl`
   }));
-
-  return <DenseTable dags={data || []} />;
+  const dagsNotFound =
+    dagIds && value
+      ? dagIds.filter(id => !value.find(d => d.dag_id === id))
+      : [];
+  return (
+    <>
+      {dagsNotFound.length ? (
+        <WarningPanel title={`${dagsNotFound.length} DAGs were not found`}>
+          {dagsNotFound.map(dagId => (
+            <Typography key={dagId}>{dagId}</Typography>
+          ))}
+        </WarningPanel>
+      ) : (
+        ''
+      )}
+      <DenseTable dags={data || []} />
+    </>
+  );
 };

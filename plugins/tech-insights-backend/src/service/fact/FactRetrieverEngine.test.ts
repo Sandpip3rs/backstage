@@ -21,7 +21,10 @@ import {
   TechInsightsStore,
 } from '@backstage/plugin-tech-insights-node';
 import { FactRetrieverRegistry } from './FactRetrieverRegistry';
-import { FactRetrieverEngine } from './FactRetrieverEngine';
+import {
+  DefaultFactRetrieverEngine,
+  FactRetrieverEngine,
+} from './FactRetrieverEngine';
 import {
   DatabaseManager,
   getVoidLogger,
@@ -36,6 +39,8 @@ jest.useFakeTimers();
 const testFactRetriever: FactRetriever = {
   id: 'test_factretriever',
   version: '0.0.1',
+  title: 'Test 1',
+  description: 'testing',
   entityFilter: [{ kind: 'component' }],
   schema: {
     testnumberfact: {
@@ -129,7 +134,7 @@ describe('FactRetrieverEngine', () => {
     };
     const manager = databaseManager as DatabaseManager;
     const scheduler = new TaskScheduler(manager, getVoidLogger());
-    return await FactRetrieverEngine.create({
+    return await DefaultFactRetrieverEngine.create({
       factRetrieverContext: {
         logger: getVoidLogger(),
         config: ConfigReader.fromConfigs([]),
@@ -206,9 +211,7 @@ describe('FactRetrieverEngine', () => {
         { ...testFactRetriever, handler },
       );
       await engine.schedule();
-      const job: FactRetrieverRegistration = engine.getJobRegistration(
-        testFactRetriever.id,
-      );
+      const job = await engine.getJobRegistration(testFactRetriever.id);
       expect(job.cadence!!).toEqual(defaultCadence);
 
       await engine.triggerJob(job.factRetriever.id);

@@ -36,17 +36,21 @@ import passport from 'passport';
 import { Minimatch } from 'minimatch';
 import { CatalogAuthResolverContext } from '../lib/resolvers';
 
-type ProviderFactories = { [s: string]: AuthProviderFactory };
+/** @public */
+export type ProviderFactories = { [s: string]: AuthProviderFactory };
 
+/** @public */
 export interface RouterOptions {
   logger: Logger;
   database: PluginDatabaseManager;
   config: Config;
   discovery: PluginEndpointDiscovery;
   tokenManager: TokenManager;
+  tokenFactoryAlgorithm?: string;
   providerFactories?: ProviderFactories;
 }
 
+/** @public */
 export async function createRouter(
   options: RouterOptions,
 ): Promise<express.Router> {
@@ -56,6 +60,7 @@ export async function createRouter(
     discovery,
     database,
     tokenManager,
+    tokenFactoryAlgorithm,
     providerFactories,
   } = options;
   const router = Router();
@@ -71,6 +76,7 @@ export async function createRouter(
     keyStore,
     keyDurationSeconds,
     logger: logger.child({ component: 'token-factory' }),
+    algorithm: tokenFactoryAlgorithm,
   });
   const catalogApi = new CatalogClient({ discoveryApi: discovery });
 
@@ -119,10 +125,6 @@ export async function createRouter(
           },
           config: providersConfig.getConfig(providerId),
           logger,
-          tokenManager,
-          tokenIssuer,
-          discovery,
-          catalogApi,
           resolverContext: CatalogAuthResolverContext.create({
             logger,
             catalogApi,
@@ -141,6 +143,7 @@ export async function createRouter(
         }
         if (provider.refresh) {
           r.get('/refresh', provider.refresh.bind(provider));
+          r.post('/refresh', provider.refresh.bind(provider));
         }
 
         router.use(`/${providerId}`, r);
@@ -187,6 +190,7 @@ export async function createRouter(
   return router;
 }
 
+/** @public */
 export function createOriginFilter(
   config: Config,
 ): (origin: string) => boolean {

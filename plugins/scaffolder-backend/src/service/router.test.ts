@@ -14,11 +14,39 @@
  * limitations under the License.
  */
 
+import {
+  DatabaseManager,
+  getVoidLogger,
+  PluginDatabaseManager,
+  UrlReaders,
+} from '@backstage/backend-common';
+import { CatalogApi } from '@backstage/catalog-client';
+import { ConfigReader } from '@backstage/config';
+import { TemplateEntityV1beta3 } from '@backstage/plugin-scaffolder-common';
+import express from 'express';
+import request from 'supertest';
+import ObservableImpl from 'zen-observable';
+
+/**
+ * TODO: The following should import directly from the router file.
+ * Due to a circular dependency between this plugin and the
+ * plugin-scaffolder-backend-module-cookiecutter plugin, it results in an error:
+ * TypeError: _pluginscaffolderbackend.createTemplateAction is not a function
+ */
+import {
+  parseEntityRef,
+  stringifyEntityRef,
+  UserEntity,
+} from '@backstage/catalog-model';
+import { createRouter, DatabaseTaskStore, TaskBroker } from '../index';
+import { StorageTaskBroker } from '../scaffolder/tasks/StorageTaskBroker';
+
 const mockAccess = jest.fn();
-jest.doMock('fs-extra', () => ({
-  access: mockAccess,
+
+jest.mock('fs-extra', () => ({
+  access: (...args: any[]) => mockAccess(...args),
   promises: {
-    access: mockAccess,
+    access: (...args: any[]) => mockAccess(...args),
   },
   constants: {
     F_OK: 0,
@@ -27,32 +55,6 @@ jest.doMock('fs-extra', () => ({
   mkdir: jest.fn(),
   remove: jest.fn(),
 }));
-
-import {
-  DatabaseManager,
-  getVoidLogger,
-  PluginDatabaseManager,
-  UrlReaders,
-} from '@backstage/backend-common';
-import { CatalogApi } from '@backstage/catalog-client';
-import { TemplateEntityV1beta3 } from '@backstage/plugin-scaffolder-common';
-import { ConfigReader } from '@backstage/config';
-import ObservableImpl from 'zen-observable';
-import express from 'express';
-import request from 'supertest';
-/**
- * TODO: The following should import directly from the router file.
- * Due to a circular dependency between this plugin and the
- * plugin-scaffolder-backend-module-cookiecutter plugin, it results in an error:
- * TypeError: _pluginscaffolderbackend.createTemplateAction is not a function
- */
-import { createRouter, DatabaseTaskStore, TaskBroker } from '../index';
-import { StorageTaskBroker } from '../scaffolder/tasks/StorageTaskBroker';
-import {
-  parseEntityRef,
-  stringifyEntityRef,
-  UserEntity,
-} from '@backstage/catalog-model';
 
 function createDatabase(): PluginDatabaseManager {
   return DatabaseManager.fromConfig(
@@ -74,6 +76,7 @@ const mockUrlReader = UrlReaders.default({
 
 describe('createRouter', () => {
   let app: express.Express;
+  let loggerSpy: jest.SpyInstance;
   let taskBroker: TaskBroker;
   const catalogClient = { getEntityByRef: jest.fn() } as unknown as CatalogApi;
 
@@ -125,7 +128,7 @@ describe('createRouter', () => {
   beforeEach(async () => {
     const logger = getVoidLogger();
     const databaseTaskStore = await DatabaseTaskStore.create({
-      database: await createDatabase().getClient(),
+      database: createDatabase(),
     });
     taskBroker = new StorageTaskBroker(databaseTaskStore, logger);
 
@@ -133,9 +136,10 @@ describe('createRouter', () => {
     jest.spyOn(taskBroker, 'get');
     jest.spyOn(taskBroker, 'list');
     jest.spyOn(taskBroker, 'event$');
+    loggerSpy = jest.spyOn(logger, 'info');
 
     const router = await createRouter({
-      logger: getVoidLogger(),
+      logger: logger,
       config: new ConfigReader({}),
       database: createDatabase(),
       catalogClient,
@@ -258,6 +262,63 @@ describe('createRouter', () => {
                 name: mockTemplate.metadata?.name,
               }),
               baseUrl: 'https://dev.azure.com',
+              entity: {
+                metadata: mockTemplate.metadata,
+              },
+            },
+          },
+        }),
+      );
+    });
+
+    it('should not throw when an invalid authorization header is passed', async () => {
+      const broker = taskBroker.dispatch as jest.Mocked<TaskBroker>['dispatch'];
+      const mockToken = 'blob.eyJzdWIiOiIiLCJuYW1lIjoiSm9obiBEb2UifQ.blob';
+
+      await request(app)
+        .post('/v2/tasks')
+        .set('Authorization', `Bearer ${mockToken}`)
+        .send({
+          templateRef: stringifyEntityRef({
+            kind: 'template',
+            name: 'create-react-app-template',
+          }),
+          values: {
+            required: 'required-value',
+          },
+        });
+      expect(broker).toHaveBeenCalledWith(
+        expect.objectContaining({
+          createdBy: undefined,
+          secrets: {
+            backstageToken: undefined,
+          },
+
+          spec: {
+            apiVersion: mockTemplate.apiVersion,
+            steps: mockTemplate.spec.steps.map((step, index) => ({
+              ...step,
+              id: step.id ?? `step-${index + 1}`,
+              name: step.name ?? step.action,
+            })),
+            output: mockTemplate.spec.output ?? {},
+            parameters: {
+              required: 'required-value',
+            },
+            user: {
+              entity: undefined,
+              ref: undefined,
+            },
+            templateInfo: {
+              entityRef: stringifyEntityRef({
+                kind: 'Template',
+                namespace: 'Default',
+                name: mockTemplate.metadata?.name,
+              }),
+              baseUrl: 'https://dev.azure.com',
+              entity: {
+                metadata: mockTemplate.metadata,
+              },
             },
           },
         }),
@@ -286,6 +347,48 @@ describe('createRouter', () => {
             user: { entity: undefined, ref: undefined },
           }),
         }),
+      );
+    });
+
+    it('should emit auditlog containing without user identifier when no backstage auth is passed', async () => {
+      await request(app)
+        .post('/v2/tasks')
+        .send({
+          templateRef: stringifyEntityRef({
+            kind: 'template',
+            name: 'create-react-app-template',
+          }),
+          values: {
+            required: 'required-value',
+          },
+        });
+
+      expect(loggerSpy).toHaveBeenCalledTimes(1);
+      expect(loggerSpy).toHaveBeenCalledWith(
+        'Scaffolding task for template:default/create-react-app-template',
+      );
+    });
+
+    it('should emit auditlog containing user identifier when backstage auth is passed', async () => {
+      const mockToken =
+        'blob.eyJzdWIiOiJ1c2VyOmRlZmF1bHQvZ3Vlc3QiLCJuYW1lIjoiSm9obiBEb2UifQ.blob';
+
+      await request(app)
+        .post('/v2/tasks')
+        .set('Authorization', `Bearer ${mockToken}`)
+        .send({
+          templateRef: stringifyEntityRef({
+            kind: 'template',
+            name: 'create-react-app-template',
+          }),
+          values: {
+            required: 'required-value',
+          },
+        });
+
+      expect(loggerSpy).toHaveBeenCalledTimes(1);
+      expect(loggerSpy).toHaveBeenCalledWith(
+        'Scaffolding task for template:default/create-react-app-template created by user:default/guest',
       );
     });
   });
