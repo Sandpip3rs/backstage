@@ -1,5 +1,41 @@
 # @backstage/plugin-catalog-common
 
+## 1.0.6-next.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @backstage/plugin-permission-common@0.6.4-next.0
+  - @backstage/plugin-search-common@1.0.1-next.0
+
+## 1.0.5
+
+### Patch Changes
+
+- 92103db537: Export aggregated list of all catalog permissions
+
+## 1.0.5-next.0
+
+### Patch Changes
+
+- 92103db537: Export aggregated list of all catalog permissions
+
+## 1.0.4
+
+### Patch Changes
+
+- Updated dependencies
+  - @backstage/plugin-search-common@1.0.0
+  - @backstage/plugin-permission-common@0.6.3
+
+## 1.0.4-next.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @backstage/plugin-permission-common@0.6.3-next.0
+  - @backstage/plugin-search-common@0.3.6-next.0
+
 ## 1.0.3
 
 ### Patch Changes

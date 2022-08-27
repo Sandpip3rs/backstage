@@ -78,6 +78,7 @@ export type CatalogReactComponentsNameToClassKey = {
   CatalogReactEntitySearchBar: CatalogReactEntitySearchBarClassKey;
   CatalogReactEntityTagPicker: CatalogReactEntityTagPickerClassKey;
   CatalogReactEntityOwnerPicker: CatalogReactEntityOwnerPickerClassKey;
+  CatalogReactEntityProcessingStatusPicker: CatalogReactEntityProcessingStatusPickerClassKey;
 };
 
 // @public (undocumented)
@@ -85,6 +86,9 @@ export type CatalogReactEntityLifecyclePickerClassKey = 'input';
 
 // @public (undocumented)
 export type CatalogReactEntityOwnerPickerClassKey = 'input';
+
+// @public (undocumented)
+export type CatalogReactEntityProcessingStatusPickerClassKey = 'input';
 
 // @public (undocumented)
 export type CatalogReactEntitySearchBarClassKey = 'searchToolbar' | 'input';
@@ -105,20 +109,13 @@ export const columnFactories: Readonly<{
   createEntityRefColumn<T extends Entity>(options: {
     defaultKind?: string;
   }): TableColumn<T>;
-  createEntityRelationColumn<T_1 extends Entity>({
-    title,
-    relation,
-    defaultKind,
-    filter: entityFilter,
-  }: {
+  createEntityRelationColumn<T_1 extends Entity>(options: {
     title: string;
     relation: string;
-    defaultKind?: string | undefined;
-    filter?:
-      | {
-          kind: string;
-        }
-      | undefined;
+    defaultKind?: string;
+    filter?: {
+      kind: string;
+    };
   }): TableColumn<T_1>;
   createOwnerColumn<T_2 extends Entity>(): TableColumn<T_2>;
   createDomainColumn<T_3 extends Entity>(): TableColumn<T_3>;
@@ -137,7 +134,18 @@ export type DefaultEntityFilters = {
   lifecycles?: EntityLifecycleFilter;
   tags?: EntityTagFilter;
   text?: EntityTextFilter;
+  orphan?: EntityOrphanFilter;
+  error?: EntityErrorFilter;
 };
+
+// @public
+export class EntityErrorFilter implements EntityFilter {
+  constructor(value: boolean);
+  // (undocumented)
+  filterEntity(entity: Entity): boolean;
+  // (undocumented)
+  readonly value: boolean;
+}
 
 // @public (undocumented)
 export type EntityFilter = {
@@ -223,6 +231,15 @@ export type EntityLoadingStatus<TEntity extends Entity = Entity> = {
 };
 
 // @public
+export class EntityOrphanFilter implements EntityFilter {
+  constructor(value: boolean);
+  // (undocumented)
+  filterEntity(entity: Entity): boolean;
+  // (undocumented)
+  readonly value: boolean;
+}
+
+// @public
 export class EntityOwnerFilter implements EntityFilter {
   constructor(values: string[]);
   // (undocumented)
@@ -235,6 +252,9 @@ export class EntityOwnerFilter implements EntityFilter {
 
 // @public (undocumented)
 export const EntityOwnerPicker: () => JSX.Element | null;
+
+// @public (undocumented)
+export const EntityProcessingStatusPicker: () => JSX.Element;
 
 // @public
 export const EntityProvider: (props: EntityProviderProps) => JSX.Element;
@@ -297,12 +317,7 @@ export const EntityTable: {
     createEntityRefColumn<T_1 extends Entity>(options: {
       defaultKind?: string | undefined;
     }): TableColumn<T_1>;
-    createEntityRelationColumn<T_2 extends Entity>({
-      title,
-      relation,
-      defaultKind,
-      filter: entityFilter,
-    }: {
+    createEntityRelationColumn<T_2 extends Entity>(options: {
       title: string;
       relation: string;
       defaultKind?: string | undefined;

@@ -1,6 +1,8 @@
 {
   "releases": {
     "Release Notes": [
+      "releases/v1.5.0",
+      "releases/v1.4.0",
       "releases/v1.3.0",
       "releases/v1.2.0",
       "releases/v1.1.0",
@@ -16,6 +18,7 @@
       "overview/background",
       "overview/adopting",
       "overview/versioning-policy",
+      "overview/threat-model",
       "overview/support",
       "overview/glossary",
       "overview/logos"
@@ -149,10 +152,7 @@
       {
         "type": "subcategory",
         "label": "Bitbucket",
-        "ids": [
-          "integrations/bitbucket/locations",
-          "integrations/bitbucket/discovery"
-        ]
+        "ids": ["integrations/bitbucket/discovery"]
       },
       {
         "type": "subcategory",
@@ -160,6 +160,14 @@
         "ids": [
           "integrations/bitbucketCloud/locations",
           "integrations/bitbucketCloud/discovery"
+        ]
+      },
+      {
+        "type": "subcategory",
+        "label": "Bitbucket Server",
+        "ids": [
+          "integrations/bitbucketServer/locations",
+          "integrations/bitbucketServer/discovery"
         ]
       },
       {
@@ -213,6 +221,7 @@
       "plugins/integrating-plugin-into-software-catalog",
       "plugins/integrating-search-into-plugins",
       "plugins/composability",
+      "plugins/customization",
       "plugins/analytics",
       {
         "type": "subcategory",
@@ -290,6 +299,7 @@
     ],
     "Deployment": [
       "deployment/index",
+      "deployment/scaling",
       "deployment/docker",
       "deployment/k8s",
       "deployment/heroku"

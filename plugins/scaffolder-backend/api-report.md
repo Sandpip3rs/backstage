@@ -5,6 +5,7 @@
 ```ts
 /// <reference types="node" />
 
+import { BackendFeature } from '@backstage/backend-plugin-api';
 import { CatalogApi } from '@backstage/catalog-client';
 import { CatalogProcessor } from '@backstage/plugin-catalog-backend';
 import { CatalogProcessorEmit } from '@backstage/plugin-catalog-backend';
@@ -19,6 +20,7 @@ import { Knex } from 'knex';
 import { LocationSpec } from '@backstage/plugin-catalog-backend';
 import { Logger } from 'winston';
 import { Observable } from '@backstage/types';
+import { Octokit } from 'octokit';
 import { PluginDatabaseManager } from '@backstage/backend-common';
 import { Schema } from 'jsonschema';
 import { ScmIntegrationRegistry } from '@backstage/integration';
@@ -105,6 +107,7 @@ export function createFetchTemplateAction(options: {
   values: any;
   templateFileExtension?: string | boolean | undefined;
   copyWithoutRender?: string[] | undefined;
+  copyWithoutTemplating?: string[] | undefined;
   cookiecutterCompat?: boolean | undefined;
 }>;
 
@@ -167,6 +170,64 @@ export type CreateGithubPullRequestClientFactoryInput = {
   repo: string;
   token?: string;
 };
+
+// @public
+export function createGithubRepoCreateAction(options: {
+  integrations: ScmIntegrationRegistry;
+  githubCredentialsProvider?: GithubCredentialsProvider;
+}): TemplateAction<{
+  repoUrl: string;
+  description?: string | undefined;
+  homepage?: string | undefined;
+  access?: string | undefined;
+  deleteBranchOnMerge?: boolean | undefined;
+  gitAuthorName?: string | undefined;
+  gitAuthorEmail?: string | undefined;
+  allowRebaseMerge?: boolean | undefined;
+  allowSquashMerge?: boolean | undefined;
+  allowMergeCommit?: boolean | undefined;
+  requireCodeOwnerReviews?: boolean | undefined;
+  requiredStatusCheckContexts?: string[] | undefined;
+  repoVisibility?: 'internal' | 'private' | 'public' | undefined;
+  collaborators?:
+    | (
+        | {
+            user: string;
+            access: 'pull' | 'push' | 'admin' | 'maintain' | 'triage';
+          }
+        | {
+            team: string;
+            access: 'pull' | 'push' | 'admin' | 'maintain' | 'triage';
+          }
+        | {
+            username: string;
+            access: 'pull' | 'push' | 'admin' | 'maintain' | 'triage';
+          }
+      )[]
+    | undefined;
+  token?: string | undefined;
+  topics?: string[] | undefined;
+}>;
+
+// @public
+export function createGithubRepoPushAction(options: {
+  integrations: ScmIntegrationRegistry;
+  config: Config;
+  githubCredentialsProvider?: GithubCredentialsProvider;
+}): TemplateAction<{
+  repoUrl: string;
+  description?: string | undefined;
+  defaultBranch?: string | undefined;
+  protectDefaultBranch?: boolean | undefined;
+  protectEnforceAdmins?: boolean | undefined;
+  gitCommitMessage?: string | undefined;
+  gitAuthorName?: string | undefined;
+  gitAuthorEmail?: string | undefined;
+  requireCodeOwnerReviews?: boolean | undefined;
+  requiredStatusCheckContexts?: string[] | undefined;
+  sourcePath?: string | undefined;
+  token?: string | undefined;
+}>;
 
 // @public
 export function createGithubWebhookAction(options: {
@@ -244,11 +305,6 @@ export function createPublishBitbucketServerAction(options: {
 }>;
 
 // @public
-export function createPublishFileAction(): TemplateAction<{
-  path: string;
-}>;
-
-// @public
 export function createPublishGerritAction(options: {
   integrations: ScmIntegrationRegistry;
   config: Config;
@@ -256,6 +312,20 @@ export function createPublishGerritAction(options: {
   repoUrl: string;
   description: string;
   defaultBranch?: string | undefined;
+  gitCommitMessage?: string | undefined;
+  gitAuthorName?: string | undefined;
+  gitAuthorEmail?: string | undefined;
+  sourcePath?: string | undefined;
+}>;
+
+// @public
+export function createPublishGerritReviewAction(options: {
+  integrations: ScmIntegrationRegistry;
+  config: Config;
+}): TemplateAction<{
+  repoUrl: string;
+  branch?: string | undefined;
+  sourcePath?: string | undefined;
   gitCommitMessage?: string | undefined;
   gitAuthorName?: string | undefined;
   gitAuthorEmail?: string | undefined;
@@ -269,9 +339,11 @@ export function createPublishGithubAction(options: {
 }): TemplateAction<{
   repoUrl: string;
   description?: string | undefined;
+  homepage?: string | undefined;
   access?: string | undefined;
   defaultBranch?: string | undefined;
   protectDefaultBranch?: boolean | undefined;
+  protectEnforceAdmins?: boolean | undefined;
   deleteBranchOnMerge?: boolean | undefined;
   gitCommitMessage?: string | undefined;
   gitAuthorName?: string | undefined;
@@ -317,6 +389,8 @@ export const createPublishGithubPullRequestAction: ({
   targetPath?: string | undefined;
   sourcePath?: string | undefined;
   token?: string | undefined;
+  reviewers?: string[] | undefined;
+  teamReviewers?: string[] | undefined;
 }>;
 
 // @public
@@ -332,6 +406,7 @@ export function createPublishGitlabAction(options: {
   gitCommitMessage?: string | undefined;
   gitAuthorName?: string | undefined;
   gitAuthorEmail?: string | undefined;
+  setUserAsOwner?: boolean | undefined;
 }>;
 
 // @public
@@ -344,7 +419,10 @@ export const createPublishGitlabMergeRequestAction: (options: {
   branchName: string;
   targetPath: string;
   token?: string | undefined;
+  commitAction?: 'update' | 'create' | 'delete' | undefined;
   projectid?: string | undefined;
+  removeSourceBranch?: boolean | undefined;
+  assignee?: string | undefined;
 }>;
 
 // @public
@@ -378,11 +456,7 @@ export class DatabaseTaskStore implements TaskStore {
   // (undocumented)
   claimTask(): Promise<SerializedTask | undefined>;
   // (undocumented)
-  completeTask({
-    taskId,
-    status,
-    eventBody,
-  }: {
+  completeTask(options: {
     taskId: string;
     status: TaskStatus;
     eventBody: JsonObject;
@@ -410,11 +484,11 @@ export class DatabaseTaskStore implements TaskStore {
     tasks: SerializedTask[];
   }>;
   // (undocumented)
-  listEvents({ taskId, after }: TaskStoreListEventsOptions): Promise<{
+  listEvents(options: TaskStoreListEventsOptions): Promise<{
     events: SerializedTaskEvent[];
   }>;
   // (undocumented)
-  listStaleTasks({ timeoutS }: { timeoutS: number }): Promise<{
+  listStaleTasks(options: { timeoutS: number }): Promise<{
     tasks: {
       taskId: string;
     }[];
@@ -423,20 +497,14 @@ export class DatabaseTaskStore implements TaskStore {
 
 // @public
 export type DatabaseTaskStoreOptions = {
-  database: Knex;
+  database: PluginDatabaseManager | Knex;
 };
 
 // @public
 export const executeShellCommand: (options: RunCommandOptions) => Promise<void>;
 
 // @public
-export function fetchContents({
-  reader,
-  integrations,
-  baseUrl,
-  fetchUrl,
-  outputPath,
-}: {
+export function fetchContents(options: {
   reader: UrlReader;
   integrations: ScmIntegrations;
   baseUrl?: string;
@@ -445,15 +513,14 @@ export function fetchContents({
 }): Promise<void>;
 
 // @public (undocumented)
-export interface OctokitWithPullRequestPluginClient {
-  // (undocumented)
+export type OctokitWithPullRequestPluginClient = Octokit & {
   createPullRequest(options: createPullRequest.Options): Promise<{
     data: {
       html_url: string;
       number: number;
     };
   } | null>;
-}
+};
 
 // @public
 export interface RouterOptions {
@@ -484,6 +551,9 @@ export type RunCommandOptions = {
   options?: SpawnOptionsWithoutStdio;
   logStream?: Writable;
 };
+
+// @alpha
+export const scaffolderCatalogModule: (options?: unknown) => BackendFeature;
 
 // @public (undocumented)
 export class ScaffolderEntitiesProcessor implements CatalogProcessor {

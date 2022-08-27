@@ -35,6 +35,11 @@ import { Jacoco } from './converter/jacoco';
 import { Converter } from './converter';
 import { getEntitySourceLocation } from '@backstage/catalog-model';
 
+/**
+ * Options for {@link createRouter}.
+ *
+ * @public
+ */
 export interface RouterOptions {
   config: Config;
   discovery: PluginEndpointDiscovery;
@@ -52,9 +57,7 @@ export const makeRouter = async (
 ): Promise<express.Router> => {
   const { config, logger, discovery, database, urlReader } = options;
 
-  const codeCoverageDatabase = await CodeCoverageDatabase.create(
-    await database.getClient(),
-  );
+  const codeCoverageDatabase = await CodeCoverageDatabase.create(database);
   const codecovUrl = await discovery.getExternalBaseUrl('code-coverage');
   const catalogApi: CatalogApi = new CatalogClient({ discoveryApi: discovery });
   const scm = ScmIntegrations.fromConfig(config);
@@ -211,6 +214,11 @@ export const makeRouter = async (
   return router;
 };
 
+/**
+ * Creates a code-coverage plugin backend router.
+ *
+ * @public
+ */
 export async function createRouter(
   options: RouterOptions,
 ): Promise<express.Router> {

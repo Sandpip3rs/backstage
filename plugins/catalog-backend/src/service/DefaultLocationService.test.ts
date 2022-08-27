@@ -48,6 +48,7 @@ describe('DefaultLocationServiceTest', () => {
             name: 'foo',
           },
         },
+        refreshKeys: [],
         deferredEntities: [
           {
             entity: {
@@ -75,6 +76,7 @@ describe('DefaultLocationServiceTest', () => {
           },
         },
         deferredEntities: [],
+        refreshKeys: [],
         relations: [],
         errors: [],
       });
@@ -134,6 +136,7 @@ describe('DefaultLocationServiceTest', () => {
           },
         },
         deferredEntities: [],
+        refreshKeys: [],
         relations: [],
         errors: [],
       });
@@ -141,6 +144,7 @@ describe('DefaultLocationServiceTest', () => {
       store.listLocations.mockResolvedValueOnce([
         { id: '137', ...locationSpec },
       ]);
+
       const result = await locationService.createLocation(
         { type: 'url', target: 'https://backstage.io/catalog-info.yaml' },
         true,
@@ -161,6 +165,7 @@ describe('DefaultLocationServiceTest', () => {
             name: 'foo',
           },
         },
+        refreshKeys: [],
         deferredEntities: [
           {
             entity: {
@@ -188,6 +193,7 @@ describe('DefaultLocationServiceTest', () => {
           },
         },
         deferredEntities: [],
+        refreshKeys: [],
         relations: [],
         errors: [],
       });
@@ -197,7 +203,7 @@ describe('DefaultLocationServiceTest', () => {
           { type: 'url', target: 'https://backstage.io/catalog-info.yaml' },
           true,
         ),
-      ).rejects.toThrowError('Duplicate nested entity: location:default/foo');
+      ).rejects.toThrow('Duplicate nested entity: location:default/foo');
     });
 
     it('should return exists false when the location does not exist beforehand', async () => {
@@ -211,6 +217,7 @@ describe('DefaultLocationServiceTest', () => {
             name: 'bar',
           },
         },
+        refreshKeys: [],
         deferredEntities: [],
         relations: [],
         errors: [],
@@ -219,6 +226,7 @@ describe('DefaultLocationServiceTest', () => {
       store.listLocations.mockResolvedValueOnce([
         { id: '987', type: 'url', target: 'https://example.com' },
       ]);
+
       const result = await locationService.createLocation(
         { type: 'url', target: 'https://backstage.io/catalog-info.yaml' },
         true,
@@ -253,7 +261,41 @@ describe('DefaultLocationServiceTest', () => {
       });
     });
 
-    it('should not allow locations of unknown types', async () => {
+    it('should create location with unknown type if configuration allows it', async () => {
+      const locationSpec = {
+        type: 'unknown',
+        target: 'https://backstage.io/catalog-info.yaml',
+      };
+
+      store.createLocation.mockResolvedValue({
+        ...locationSpec,
+        id: '123',
+      });
+
+      const locationServiceAllowingUnknownType = new DefaultLocationService(
+        store,
+        orchestrator,
+        {
+          allowedLocationTypes: ['url', 'unknown'],
+        },
+      );
+      await expect(
+        locationServiceAllowingUnknownType.createLocation(locationSpec, false),
+      ).resolves.toEqual({
+        entities: [],
+        location: {
+          id: '123',
+          target: 'https://backstage.io/catalog-info.yaml',
+          type: 'unknown',
+        },
+      });
+      expect(store.createLocation).toBeCalledWith({
+        target: 'https://backstage.io/catalog-info.yaml',
+        type: 'unknown',
+      });
+    });
+
+    it('should not allow locations of unknown types by default', async () => {
       await expect(
         locationService.createLocation(
           {
@@ -261,6 +303,25 @@ describe('DefaultLocationServiceTest', () => {
             target: 'https://backstage.io/catalog-info.yaml',
           },
           false,
+        ),
+      ).rejects.toThrow(InputError);
+    });
+
+    it('should return default InputError for failed processed entities in dryRun mode', async () => {
+      store.listLocations.mockResolvedValueOnce([]);
+
+      orchestrator.process.mockResolvedValueOnce({
+        ok: false,
+        errors: [new Error('Error: Unable to read url')],
+      });
+
+      await expect(
+        locationService.createLocation(
+          {
+            type: 'url',
+            target: 'https://backstage.io/wrong-url/catalog-info.yaml',
+          },
+          true,
         ),
       ).rejects.toThrow(InputError);
     });

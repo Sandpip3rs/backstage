@@ -101,13 +101,15 @@ export type KubernetesObjectTypes =
   | 'services'
   | 'configmaps'
   | 'deployments'
+  | 'limitranges'
   | 'replicasets'
   | 'horizontalpodautoscalers'
   | 'jobs'
   | 'cronjobs'
   | 'ingresses'
   | 'customresources'
-  | 'statefulsets';
+  | 'statefulsets'
+  | 'daemonsets';
 
 /**
  * Used to load cluster details from different sources
@@ -192,6 +194,11 @@ export interface ClusterDetails {
    * @see dashboardApp
    */
   dashboardParameters?: JsonObject;
+  /**
+   * Specifies which custom resources to look for when returning an entity's
+   * Kubernetes resources.
+   */
+  customResources?: CustomResourceMatcher[];
 }
 
 /**

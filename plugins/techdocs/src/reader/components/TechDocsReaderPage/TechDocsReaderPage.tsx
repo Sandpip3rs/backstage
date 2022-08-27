@@ -15,7 +15,7 @@
  */
 
 import React, { ReactNode, ReactChild, Children } from 'react';
-import { useOutlet, useParams } from 'react-router-dom';
+import { useOutlet } from 'react-router-dom';
 
 import { Page } from '@backstage/core-components';
 import { CompoundEntityRef } from '@backstage/catalog-model';
@@ -29,6 +29,8 @@ import { TechDocsReaderPageRenderFunction } from '../../../types';
 import { TechDocsReaderPageContent } from '../TechDocsReaderPageContent';
 import { TechDocsReaderPageHeader } from '../TechDocsReaderPageHeader';
 import { TechDocsReaderPageSubheader } from '../TechDocsReaderPageSubheader';
+import { rootDocsRouteRef } from '../../../routes';
+import { useRouteRefParams } from '@backstage/core-plugin-api';
 
 type Extension = ReactChild & {
   type: {
@@ -83,7 +85,7 @@ export type TechDocsReaderPageProps = {
  * @public
  */
 export const TechDocsReaderPage = (props: TechDocsReaderPageProps) => {
-  const { kind, name, namespace } = useParams();
+  const { kind, name, namespace } = useRouteRefParams(rootDocsRouteRef);
   const { children, entityRef = { kind, name, namespace } } = props;
 
   const outlet = useOutlet();
@@ -106,16 +108,18 @@ export const TechDocsReaderPage = (props: TechDocsReaderPageProps) => {
   return (
     <TechDocsReaderPageProvider entityRef={entityRef}>
       {({ metadata, entityMetadata, onReady }) => (
-        <Page themeId="documentation">
-          {children instanceof Function
-            ? children({
-                entityRef,
-                techdocsMetadataValue: metadata.value,
-                entityMetadataValue: entityMetadata.value,
-                onReady,
-              })
-            : children}
-        </Page>
+        <div className="techdocs-reader-page">
+          <Page themeId="documentation">
+            {children instanceof Function
+              ? children({
+                  entityRef,
+                  techdocsMetadataValue: metadata.value,
+                  entityMetadataValue: entityMetadata.value,
+                  onReady,
+                })
+              : children}
+          </Page>
+        </div>
       )}
     </TechDocsReaderPageProvider>
   );

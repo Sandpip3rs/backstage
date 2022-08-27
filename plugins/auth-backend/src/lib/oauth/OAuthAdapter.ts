@@ -31,7 +31,6 @@ import {
   isError,
   NotAllowedError,
 } from '@backstage/errors';
-import { TokenIssuer } from '../../identity/types';
 import { defaultCookieConfigurer, readState, verifyNonce } from './helpers';
 import { postMessageResponse, ensuresXRequestedWith } from '../flow';
 import {
@@ -45,25 +44,26 @@ import { prepareBackstageIdentityResponse } from '../../providers/prepareBacksta
 export const THOUSAND_DAYS_MS = 1000 * 24 * 60 * 60 * 1000;
 export const TEN_MINUTES_MS = 600 * 1000;
 
-export type Options = {
+/** @public */
+export type OAuthAdapterOptions = {
   providerId: string;
   secure: boolean;
   persistScopes?: boolean;
   cookieDomain: string;
   cookiePath: string;
   appOrigin: string;
-  /** @deprecated This option is no longer needed */
-  tokenIssuer?: TokenIssuer;
   isOriginAllowed: (origin: string) => boolean;
   callbackUrl: string;
 };
+
+/** @public */
 export class OAuthAdapter implements AuthProviderRouteHandlers {
   static fromConfig(
     config: AuthProviderConfig,
     handlers: OAuthHandlers,
     options: Pick<
-      Options,
-      'providerId' | 'persistScopes' | 'tokenIssuer' | 'callbackUrl'
+      OAuthAdapterOptions,
+      'providerId' | 'persistScopes' | 'callbackUrl'
     >,
   ): OAuthAdapter {
     const { origin: appOrigin } = new URL(config.appUrl);
@@ -89,7 +89,7 @@ export class OAuthAdapter implements AuthProviderRouteHandlers {
 
   constructor(
     private readonly handlers: OAuthHandlers,
-    private readonly options: Options,
+    private readonly options: OAuthAdapterOptions,
   ) {
     this.baseCookieOptions = {
       httpOnly: true,

@@ -38,7 +38,36 @@ function duration(startTimestamp: [number, number]): string {
   return `${seconds.toFixed(1)}s`;
 }
 
-export class FactRetrieverEngine {
+/**
+ * @public
+ *
+ * FactRetrieverEngine responsible scheduling and running fact retrieval tasks.
+ */
+export interface FactRetrieverEngine {
+  /**
+   * Schedules fact retriever run cycles based on configuration provided in the registration.
+   *
+   * Default implementation uses backend-tasks to handle scheduling. This function can be called multiple
+   * times, where initial calls schedule the tasks and subsequents invocations update the schedules.
+   */
+  schedule(): Promise<void>;
+
+  /**
+   * Provides possibility to manually run a fact retriever job and construct fact data
+   *
+   * @param ref - Reference to the task name stored in the executor database. By convention this is the fact retriever id
+   */
+  triggerJob(ref: string): Promise<void>;
+
+  /**
+   * Exposes fact retriever job configuration information about previous and next runs and schedule
+   *
+   * @param ref - Reference to the task name stored in the executor database. By convention this is the fact retriever id
+   */
+  getJobRegistration(ref: string): Promise<FactRetrieverRegistration>;
+}
+
+export class DefaultFactRetrieverEngine implements FactRetrieverEngine {
   private constructor(
     private readonly repository: TechInsightsStore,
     private readonly factRetrieverRegistry: FactRetrieverRegistry,
@@ -66,13 +95,10 @@ export class FactRetrieverEngine {
       defaultTimeout,
     } = options;
 
-    await Promise.all(
-      factRetrieverRegistry
-        .listRetrievers()
-        .map(it => repository.insertFactSchema(it)),
-    );
+    const retrievers = await factRetrieverRegistry.listRetrievers();
+    await Promise.all(retrievers.map(it => repository.insertFactSchema(it)));
 
-    return new FactRetrieverEngine(
+    return new DefaultFactRetrieverEngine(
       repository,
       factRetrieverRegistry,
       factRetrieverContext,
@@ -84,7 +110,7 @@ export class FactRetrieverEngine {
   }
 
   async schedule() {
-    const registrations = this.factRetrieverRegistry.listRegistrations();
+    const registrations = await this.factRetrieverRegistry.listRegistrations();
     const newRegs: string[] = [];
 
     await Promise.all(
@@ -115,7 +141,7 @@ export class FactRetrieverEngine {
     );
   }
 
-  getJobRegistration(ref: string): FactRetrieverRegistration {
+  getJobRegistration(ref: string): Promise<FactRetrieverRegistration> {
     return this.factRetrieverRegistry.get(ref);
   }
 
