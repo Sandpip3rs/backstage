@@ -45,7 +45,10 @@ following naming pattern may be suitable:</p>
 <li><p>[ ] Create a changeset for the affected package(s), then run <code>yarn release</code> in the root
 of the repo in order to convert your changeset into package version bumps and changelog entries.
 Commit these changes as a second <code>&quot;Generated release&quot;</code> commit.</p></li>
-<li><p>[ ] Create PR towards the base branch (<code>patch/v1.18.0</code>) containing the two commits.</p></li>
+<li><p>[ ] Create PR towards the base branch (<code>patch/v1.18.0</code>) containing the two commits.</p>
+<ul>
+<li>[ ] Add a PR body, it will be used as the release description. Typically something like &quot;This release fixes ...&quot;.</li>
+</ul></li>
 <li><p>[ ] Review/Merge the PR into <code>patch/v1.18.0</code>. This will automatically trigger a release.</p></li>
 </ul></li>
 <li><p>[ ] Look up the new version of our package in the patch PR as well as the new release
@@ -56,7 +59,7 @@ will in this case be <code>6.5.1</code> and <code>v1.18.1</code>. You will need 
 master branch as well. Create a PR that contains the following:</p>
 <ul>
 <li>[ ] The fix, which you can likely cherry-pick from your patch branch: <code>git cherry-pick origin/patch/v1.18.0^</code></li>
-<li>[ ] An updated <code>CHANGELOG.md</code> of all patched packages from the tip of the patch branch, <code>git checkout origin/patch/v1.18.0 -- {packages,plugins}/*/CHANGELOG.md</code>.</li>
+<li>[ ] An updated <code>CHANGELOG.md</code> of all patched packages from the tip of the patch branch, <code>git checkout origin/patch/v1.18.0 -- {packages,plugins}/*/CHANGELOG.md</code>. Note that if the patch happens after any next-line releases you'll need to restore those entries in the changelog, placing the patch release entry beneath any next-line release entries.</li>
 <li>[ ] A changeset with the message &quot;Applied the fix from version <code>6.5.1</code> of this package, which is part of the <code>v1.18.1</code> release of Backstage.&quot;</li>
 </ul></li>
 </ul>
