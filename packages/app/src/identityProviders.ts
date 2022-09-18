@@ -16,16 +16,14 @@
 
 import {
   bitbucketAuthApiRef,
-  configApiRef,
   githubAuthApiRef,
   gitlabAuthApiRef,
   googleAuthApiRef,
   microsoftAuthApiRef,
   oktaAuthApiRef,
   oneloginAuthApiRef,
-  useApi,
 } from '@backstage/core-plugin-api';
-import {Config} from '@backstage/config';
+import { Config } from '@backstage/config';
 
 type Provider = {
   id: string;
@@ -34,10 +32,8 @@ type Provider = {
   apiRef: any;
 };
 
-export const providers = () => {
+export const providers = (config: Config) => {
   const providerList: Provider[] = [];
-
-  const config = useApi(configApiRef);
   const configuredProviders: Config | undefined =
     config.getOptionalConfig('auth.providers');
 
