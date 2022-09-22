@@ -24,7 +24,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     corepack enable && \
     yarn set version stable && \
-    yarn plugin import @yarnpkg/plugin-workspace-tools && \
+    yarn plugin import @yarnpkg/plugin-workspace-tools
 
 
 
