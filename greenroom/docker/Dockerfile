@@ -13,6 +13,9 @@
 
 FROM node:16-bullseye-slim
 
+# Set Python interpreter for `node-gyp` to use
+ENV PYTHON /usr/bin/python3
+
 # Install sqlite3 dependencies. You can skip this if you don't use sqlite3 in the image,
 # in which case you should also move better-sqlite3 to "devDependencies" in package.json.
 
@@ -21,7 +24,8 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     corepack enable && \
     yarn set version stable && \
-    npm config --global set python /usr/bin/python3
+    yarn plugin import @yarnpkg/plugin-workspace-tools && \
+
 
 
 # From here on we use the least-privileged `node` user to run the backend.
@@ -37,7 +41,7 @@ ENV NODE_ENV production
 COPY --chown=node:node yarn.lock package.json packages/backend/dist/skeleton.tar.gz ./
 RUN tar xzf skeleton.tar.gz && rm skeleton.tar.gz
 
-RUN yarn install --frozen-lockfile --production --network-timeout 300000 && rm -rf "$(yarn cache dir)"
+RUN yarn workspaces focus --all --production && rm -rf "$(yarn cache clean)"
 
 # Then copy the rest of the backend bundle, along with any other files we might want.
 COPY --chown=node:node packages/backend/dist/bundle.tar.gz app-config*.yaml ./
