@@ -15,10 +15,14 @@ FROM node:16-bullseye-slim
 
 # Install sqlite3 dependencies. You can skip this if you don't use sqlite3 in the image,
 # in which case you should also move better-sqlite3 to "devDependencies" in package.json.
+
+RUN corepack enable && yarn set version stable
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends libsqlite3-dev python3 build-essential && \
     rm -rf /var/lib/apt/lists/* && \
     yarn config set python /usr/bin/python3
+
 
 # From here on we use the least-privileged `node` user to run the backend.
 USER node
