@@ -21,7 +21,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     corepack enable && \
     yarn set version stable && \
-    yarn config set python /usr/bin/python3
+    npm config --global set python /usr/bin/python3
 
 
 # From here on we use the least-privileged `node` user to run the backend.
