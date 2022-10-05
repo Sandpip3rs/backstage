@@ -23,7 +23,7 @@ import {
   oktaAuthApiRef,
   oneloginAuthApiRef,
 } from '@backstage/core-plugin-api';
-import {Config} from '@backstage/config';
+import { Config } from '@backstage/config';
 
 type Provider = {
   id: string;
