@@ -21,11 +21,17 @@ RUN apt-get update && \
     yarn config set python /usr/bin/python3
 
 # From here on we use the least-privileged `node` user to run the backend.
-USER node
 WORKDIR /app
+RUN chown node:node /app
+USER node
+
 
 # This switches many Node.js dependencies to production mode.
 ENV NODE_ENV production
+
+# Copy over Yarn 3 configuration, release, and plugins
+COPY --chown=node:node .yarn ./.yarn
+COPY --chown=node:node .yarnrc.yml ./
 
 # Copy repo skeleton first, to avoid unnecessary docker cache invalidation.
 # The skeleton contains the package.json of each package in the monorepo,
@@ -33,13 +39,15 @@ ENV NODE_ENV production
 COPY --chown=node:node yarn.lock package.json packages/backend/dist/skeleton.tar.gz ./
 RUN tar xzf skeleton.tar.gz && rm skeleton.tar.gz
 
-RUN yarn install --frozen-lockfile --production --network-timeout 300000 && rm -rf "$(yarn cache dir)"
+# Note that this install is not immutable, which is one of the reasons we don't recommend Yarn 3 yet
+RUN yarn workspaces focus --all --production && rm -rf "$(yarn cache clean)"
 
 # Then copy the rest of the backend bundle, along with any other files we might want.
 COPY --chown=node:node packages/backend/dist/bundle.tar.gz app-config*.yaml ./
 RUN tar xzf bundle.tar.gz && rm bundle.tar.gz
 
 # Custom Greenroom
+User root
 RUN mkdir /opt/greenroom && \
     apt update && \
     apt-get install -y curl zip && \
@@ -48,8 +56,8 @@ RUN mkdir /opt/greenroom && \
     unzip awscliv2.zip && \
     ./aws/install
 
+USER node
 COPY greenroom/docker/entrypoint.sh /opt/greenroom
-
 # End of custom Greenroom
 
 CMD ["node", "packages/backend", "--config", "app-config.yaml"]

@@ -26,11 +26,15 @@ import {
   RELATION_PART_OF,
   RELATION_PROVIDES_API,
 } from '@backstage/catalog-model';
-import {createApp} from '@backstage/app-defaults';
-import {FlatRoutes} from '@backstage/core-app-api';
-import {AlertDisplay, OAuthRequestDialog, SignInPage,} from '@backstage/core-components';
-import {apiDocsPlugin, ApiExplorerPage} from '@backstage/plugin-api-docs';
-import {AzurePullRequestsPage} from '@backstage/plugin-azure-devops';
+import { createApp } from '@backstage/app-defaults';
+import { FlatRoutes } from '@backstage/core-app-api';
+import {
+  AlertDisplay,
+  OAuthRequestDialog,
+  SignInPage,
+} from '@backstage/core-components';
+import { apiDocsPlugin, ApiExplorerPage } from '@backstage/plugin-api-docs';
+import { AzurePullRequestsPage } from '@backstage/plugin-azure-devops';
 
 import {
   CatalogEntityPage,
@@ -38,58 +42,68 @@ import {
   catalogPlugin,
 } from '@internal/plugin-catalog-customized';
 
-import {CatalogGraphPage} from '@backstage/plugin-catalog-graph';
-import {CatalogImportPage, catalogImportPlugin,} from '@backstage/plugin-catalog-import';
+import { CatalogGraphPage } from '@backstage/plugin-catalog-graph';
+import {
+  CatalogImportPage,
+  catalogImportPlugin,
+} from '@backstage/plugin-catalog-import';
 import {
   CostInsightsLabelDataflowInstructionsPage,
   CostInsightsPage,
   CostInsightsProjectGrowthInstructionsPage,
 } from '@backstage/plugin-cost-insights';
-import {orgPlugin} from '@backstage/plugin-org';
-import {ExplorePage} from '@backstage/plugin-explore';
-import {GcpProjectsPage} from '@backstage/plugin-gcp-projects';
-import {GraphiQLPage} from '@backstage/plugin-graphiql';
-import {HomepageCompositionRoot} from '@backstage/plugin-home';
-import {LighthousePage} from '@backstage/plugin-lighthouse';
-import {NewRelicPage} from '@backstage/plugin-newrelic';
+import { orgPlugin } from '@backstage/plugin-org';
+import { ExplorePage } from '@backstage/plugin-explore';
+import { GcpProjectsPage } from '@backstage/plugin-gcp-projects';
+import { GraphiQLPage } from '@backstage/plugin-graphiql';
+import { HomepageCompositionRoot } from '@backstage/plugin-home';
+import { LighthousePage } from '@backstage/plugin-lighthouse';
+import { NewRelicPage } from '@backstage/plugin-newrelic';
 import {
   NextScaffolderPage,
   ScaffolderFieldExtensions,
   ScaffolderPage,
   scaffolderPlugin,
 } from '@backstage/plugin-scaffolder';
-import {SearchPage} from '@backstage/plugin-search';
-import {TechRadarPage} from '@backstage/plugin-tech-radar';
-import {TechDocsIndexPage, techdocsPlugin, TechDocsReaderPage,} from '@backstage/plugin-techdocs';
-import {TechDocsAddons} from '@backstage/plugin-techdocs-react';
+import { SearchPage } from '@backstage/plugin-search';
+import { TechRadarPage } from '@backstage/plugin-tech-radar';
+import {
+  TechDocsIndexPage,
+  techdocsPlugin,
+  TechDocsReaderPage,
+} from '@backstage/plugin-techdocs';
+import { TechDocsAddons } from '@backstage/plugin-techdocs-react';
 import {
   ExpandableNavigation,
   ReportIssue,
   TextSize,
 } from '@backstage/plugin-techdocs-module-addons-contrib';
-import {UserSettingsPage, UserSettingsTab,} from '@backstage/plugin-user-settings';
-import {AdvancedSettings} from './components/advancedSettings';
+import {
+  UserSettingsPage,
+  UserSettingsTab,
+} from '@backstage/plugin-user-settings';
+import { AdvancedSettings } from './components/advancedSettings';
 import AlarmIcon from '@material-ui/icons/Alarm';
 import React from 'react';
-import {Navigate, Route} from 'react-router';
-import {apis} from './apis';
-import {entityPage} from './components/catalog/EntityPage';
-import {homePage} from './components/home/HomePage';
-import {Root} from './components/Root';
+import { Navigate, Route } from 'react-router';
+import { apis } from './apis';
+import { entityPage } from './components/catalog/EntityPage';
+import { homePage } from './components/home/HomePage';
+import { Root } from './components/Root';
 import {
   DelayingComponentFieldExtension,
   LowerCaseValuePickerFieldExtension,
 } from './components/scaffolder/customScaffolderExtensions';
-import {defaultPreviewTemplate} from './components/scaffolder/defaultPreviewTemplate';
-import {searchPage} from './components/search/SearchPage';
-import {providers} from './identityProviders';
+import { defaultPreviewTemplate } from './components/scaffolder/defaultPreviewTemplate';
+import { searchPage } from './components/search/SearchPage';
+import { providers } from './identityProviders';
 import * as plugins from './plugins';
 
-import {techDocsPage} from './components/techdocs/TechDocsPage';
-import {ApacheAirflowPage} from '@backstage/plugin-apache-airflow';
-import {PermissionedRoute} from '@backstage/plugin-permission-react';
-import {catalogEntityCreatePermission} from '@backstage/plugin-catalog-common';
-import {configApiRef, useApi} from '@backstage/core-plugin-api';
+import { techDocsPage } from './components/techdocs/TechDocsPage';
+import { ApacheAirflowPage } from '@backstage/plugin-apache-airflow';
+import { PermissionedRoute } from '@backstage/plugin-permission-react';
+import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common';
+import { configApiRef, useApi } from '@backstage/core-plugin-api';
 
 const app = createApp({
   apis,
