@@ -55,7 +55,7 @@ RUN mkdir /opt/greenroom && \
     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip && \
     ./aws/install && \
-     chown node:node /opt/greenroom
+     chown -R node:node /opt/greenroom
 
 USER node
 COPY greenroom/docker/entrypoint.sh /opt/greenroom
